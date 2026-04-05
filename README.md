@@ -69,7 +69,7 @@ Download `phonopy_params.yaml.xz` from the link above, then run:
 
 ```bash
 python phonon_dos.py --params phonopy_params.yaml.xz \
-    --adaptive --coarse-mesh 11 11 11 --gamma-points 2000 \
+    --adaptive --coarse-mesh 50 50 50 --gamma-points 3000 \
     --fdos --acoustic 1 2 3 --fmin-fdos 0.0 --fmax-fdos 1.5 \
     --fit --fit-fmin 0.5 --fit-fmax 1.2 --eval-freq 1.0 \
     --branches 1 2 3 \
@@ -77,6 +77,8 @@ python phonon_dos.py --params phonopy_params.yaml.xz \
 ```
 
 ---
+The output from the previous command is:
+![Fractional DOS](fractional_dos.png)
 
 ## All command-line options
 
