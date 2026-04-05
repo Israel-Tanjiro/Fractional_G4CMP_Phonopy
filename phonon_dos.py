@@ -611,8 +611,13 @@ def parse_args():
     p.add_argument("--born",   metavar="FILE", default=None,
                    help="BORN file for NAC correction (optional)")
 
+    # ── Info mode ─────────────────────────────────────────────────────────────
+    p.add_argument("--info", action="store_true",
+                   help="Print structure info and branch summary, then exit. "
+                        "No mesh or DOS computation needed.")
+
     # ── Q-point sampling ──────────────────────────────────────────────────────
-    qmesh = p.add_mutually_exclusive_group(required=True)
+    qmesh = p.add_mutually_exclusive_group(required=False)
     qmesh.add_argument("--mesh", type=int, nargs=3, metavar=("NX", "NY", "NZ"),
                         help="Uniform Monkhorst-Pack mesh  e.g. --mesh 21 21 21")
     qmesh.add_argument("--adaptive", action="store_true",
@@ -686,6 +691,65 @@ def parse_args():
 #  Main
 # =============================================================================
 
+def print_info(ph):
+    """
+    Print a concise summary of the structure and phonon branches.
+    Runs a tiny 2x2x2 mesh just to count branches — fast, no full DOS.
+    """
+    from phonopy.structure.atoms import PhonopyAtoms
+
+    lattice        = ph.primitive.cell
+    crystal_system = detect_crystal_system(lattice)
+    rec_lattice    = np.linalg.inv(lattice).T * 2 * math.pi
+
+    # Lattice parameters
+    a = np.linalg.norm(lattice[0])
+    b = np.linalg.norm(lattice[1])
+    c = np.linalg.norm(lattice[2])
+    def angle(v1, v2):
+        cos = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+        return math.degrees(math.acos(np.clip(cos, -1, 1)))
+    alpha = angle(lattice[1], lattice[2])
+    beta  = angle(lattice[0], lattice[2])
+    gamma = angle(lattice[0], lattice[1])
+
+    # Quick frequency scan on coarse 4x4x4 mesh to get branch info
+    qpts_quick = uniform_mesh_qpoints([4, 4, 4])
+    ph.run_qpoints(qpts_quick, with_eigenvectors=False)
+    freqs      = ph.get_qpoints_dict()["frequencies"]
+    n_branches = freqs.shape[1]
+    n_atoms    = ph.primitive.get_number_of_atoms()
+
+    print("\n" + "=" * 58)
+    print("  STRUCTURE & BRANCH INFO")
+    print("=" * 58)
+    print(f"  Crystal system   : {crystal_system.upper()}")
+    print(f"  Atoms in unit cell: {n_atoms}")
+    print(f"  Lattice parameters:")
+    print(f"    a = {a:.4f} Å    alpha = {alpha:.2f}°")
+    print(f"    b = {b:.4f} Å    beta  = {beta:.2f}°")
+    print(f"    c = {c:.4f} Å    gamma = {gamma:.2f}°")
+    print(f"\n  Total branches   : {n_branches}  (= 3 x {n_atoms} atoms)")
+    print(f"  Acoustic branches: 3   (always branches 1, 2, 3 near Γ)")
+    print(f"  Optical branches : {n_branches - 3}")
+    print(f"\n  Frequency range  : [{freqs.min():.4f}, {freqs.max():.4f}] THz")
+    print(f"  (from quick 4×4×4 mesh — run full DOS for accurate values)")
+    print()
+    print(f"  {'Branch':>8}  {'Min freq (THz)':>16}  {'Max freq (THz)':>16}")
+    print(f"  {'-'*8}  {'-'*16}  {'-'*16}")
+    for b in range(n_branches):
+        tag = " ← acoustic" if b < 3 else ""
+        print(f"  {b+1:>8}  {freqs[:, b].min():>16.4f}  {freqs[:, b].max():>16.4f}{tag}")
+    print("=" * 58)
+    print()
+    print("  Suggested commands:")
+    print(f"    --acoustic 1 2 3          (default acoustic branches)")
+    print(f"    --branches 1 2 3          (plot first 3 branches)")
+    print(f"    --branches 1 {n_branches//2} {n_branches}   (plot first, mid, last)")
+    print("=" * 58)
+print()
+
+
 def main():
     args = parse_args()
 
@@ -694,6 +758,16 @@ def main():
         ph = load_from_params(args.params)
     else:
         ph = load_from_force_sets(args.forces, args.poscar, args.born)
+
+    # ── 1b. Info mode — print branch summary and exit ─────────────────────
+    if args.info:
+        print_info(ph)
+        sys.exit(0)
+
+    # Validate that a mesh mode was given when not in info mode
+    if not args.mesh and not args.adaptive:
+        sys.exit("ERROR: you must specify --mesh NX NY NZ  or  --adaptive  "
+                 "(or use --info to inspect branches without computing DOS)")
 
     # ── 2. Detect crystal system ───────────────────────────────────────────
     lattice        = ph.primitive.cell          # (3,3) real-space lattice [Angstrom]
