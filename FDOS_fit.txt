@@ -1,0 +1,12 @@
+# Linear fit of Fractional Acoustic DOS
+# Fit window  : [0.5, 1.2] THz
+# Evaluated at: 1.0 THz
+# Model: F(omega) = slope * omega + intercept
+#
+Branch            Slope    Intercept      F(1.0THz)         R2
+--------------------------------------------------------------
+F_TS          -0.053332     0.559461       0.506128   0.748806
+F_TF           0.018784     0.322637       0.341422   0.340187
+F_L            0.034548     0.117902       0.152450   0.655640
+--------------------------------------------------------------
+Sum                                        1.000000
