@@ -77,8 +77,12 @@ python phonon_dos.py --params phonopy_params.yaml.xz \
 ```
 
 ---
+
 The output from the previous command is:
+
 ![Fractional DOS](fractional_dos.png)
+
+---
 
 ## All command-line options
 
@@ -157,7 +161,61 @@ The fit window should be chosen inside the `--fdos` range and in a region where 
 
 ---
 
+### Inspect branches with `--info`
+
+Before running the full DOS, use `--info` to quickly inspect the structure and see all branch numbers — no mesh or DOS computation needed:
+
+```bash
+python phonon_dos.py --params phonopy_params.yaml.xz --info
+```
+
+Example output (LiNbO₃):
+
+```
+===========================================================
+  STRUCTURE & BRANCH INFO
+===========================================================
+  Crystal system   : TRIGONAL
+  Atoms in unit cell: 10
+  Lattice parameters:
+    a = 5.1483 Å    alpha = 90.00°
+    b = 5.1483 Å    beta  = 90.00°
+    c = 13.8631 Å   gamma = 120.00°
+
+  Total branches   : 30  (= 3 x 10 atoms)
+  Acoustic branches: 3
+  Optical branches : 27
+
+  Frequency range  : [-0.1234, 18.4521] THz
+  (from quick 4x4x4 mesh — run full DOS for accurate values)
+
+   Branch    Min freq (THz)    Max freq (THz)
+  --------  ----------------  ----------------
+         1          -0.1234            1.2300  ← acoustic
+         2          -0.0812            1.8100  ← acoustic
+         3           0.0000            2.1400  ← acoustic
+         4           1.2300           10.4500
+       ...
+===========================================================
+```
+
+| Option | Description |
+|--------|-------------|
+| `--info` | Print structure and branch summary then exit. No `--mesh` or `--adaptive` needed. |
+
+---
+
 ### Selective branch plotting
+
+Once you know your branch numbers from `--info`, plot any subset:
+
+```bash
+# Plot the 3 acoustic branches
+python phonon_dos.py --params phonopy_params.yaml.xz     --adaptive --branches 1 2 3 --plot
+
+# Plot acoustic + a specific optical branch
+python phonon_dos.py --params phonopy_params.yaml.xz     --adaptive --branches 1 2 3 10 --plot
+```
 
 | Option | Description |
 |--------|-------------|
