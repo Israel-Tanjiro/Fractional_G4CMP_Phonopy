@@ -224,6 +224,22 @@ This is the plot with the previois command
 
 ---
 
+### Selective branch plotting and Meshing Grid
+
+Once you know your branch numbers from `--info`, plot any subset:
+
+```bash
+# Plot specific branches
+python phonon_dos.py --params phonopy_params.yaml.xz \
+    --adaptive --coarse-mesh 50 50 50 --gamma-points 3000 \
+    --branches 1 4 10 \
+    --save-qpts my_qpoints.txt \
+    --plot
+```
+
+---
+
+
 ### Output and plotting
 
 | Option | Default | Description |
