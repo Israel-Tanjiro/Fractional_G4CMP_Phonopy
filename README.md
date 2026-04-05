@@ -216,7 +216,8 @@ python phonon_dos.py --params phonopy_params.yaml.xz     --adaptive --branches 1
 # Plot acoustic + a specific optical branch
 python phonon_dos.py --params phonopy_params.yaml.xz     --adaptive --branches 1 2 3 10 --plot
 ```
-
+This is the plot with the previois command
+![Fractional DOS](dos_selected_branches.png)
 | Option | Description |
 |--------|-------------|
 | `--branches N [N ...]` | Plot the DOS of specific branches only (1-based). E.g. `--branches 1 2 3 10`. Requires `--plot`. |
